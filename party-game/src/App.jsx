@@ -11,24 +11,8 @@ export default function App() {
     const players = usePlayersList()
     const isHost = isStreamScreen()
 
-    // ---- TEMPORARY DEBUG - remove after ----
-    useEffect(() => {
-        console.log('=== APP MOUNTED ===')
-        console.log('isStreamScreen:', isStreamScreen())
-        onPlayerJoin(p => {
-            console.log('onPlayerJoin fired:', p.id, p.getProfile())
-        })
-    }, [])
-
-    useEffect(() => {
-        console.log('players list changed, count:', players.length)
-        players.forEach((p, i) => console.log(`  player[${i}]:`, p.id, p.getProfile()))
-    }, [players])
-
-    useEffect(() => {
-        console.log('gameStarted changed:', gameStarted)
-    }, [gameStarted])
-    // ---- END DEBUG ----
+    // Ghost player has name: "" — real players always have a name from Playroom's join flow
+    const realPlayers = players.filter(p => p.getProfile().name !== "")
 
     function handleStart() {
         setGameStarted(true)
@@ -42,8 +26,8 @@ export default function App() {
 
     if (isHost) {
         return gameStarted
-            ? <GameScreen key={gameKey} players={players} onRestart={handleRestart} />
-            : <LobbyScreen players={players} onStart={handleStart} />
+            ? <GameScreen key={gameKey} players={realPlayers} onRestart={handleRestart} />
+            : <LobbyScreen players={realPlayers} onStart={handleStart} />
     } else {
         return gameStarted
             ? <ControllerGame key={gameKey} />
