@@ -7,6 +7,7 @@ const EMOJIS  = ['🎮','🕹️','👾','🎯','🏆','⭐']
 
 export default function LobbyScreen({ players, onStart }) {
     const [mode, setMode] = useState(null)
+    const [boardHovered, setBoardHovered] = useState(false)
     const roomCode = getRoomCode()
     const joinUrl  = roomCode
         ? `${window.location.origin}?roomCode=${roomCode}`
@@ -26,13 +27,33 @@ export default function LobbyScreen({ players, onStart }) {
                         <span style={styles.modeDesc}>Grab your phones and jump in</span>
                     </button>
 
-                    <div style={styles.modeBtnLocked}>
+                    {/* Board Game — locked with hover preview */}
+                    <div
+                        style={styles.modeBtnLocked}
+                        onMouseEnter={() => setBoardHovered(true)}
+                        onMouseLeave={() => setBoardHovered(false)}
+                    >
                         <div style={styles.lockedBadge}>UPCOMING</div>
                         <span style={styles.modeIcon}>🗺️</span>
                         <span style={styles.modeLabel}>Board Game</span>
                         <span style={styles.modeDesc}>Strategic map, items &amp; events — coming soon</span>
-                    </div>
 
+                        {/* Hover preview image */}
+                        <div style={{
+                            ...styles.previewPopup,
+                            opacity:   boardHovered ? 1 : 0,
+                            transform: boardHovered ? 'translateY(-8px) scale(1)' : 'translateY(0px) scale(0.95)',
+                            pointerEvents: 'none',
+                        }}>
+                            <img
+                                src="/boardgame-preview.png"
+                                alt="Board game preview"
+                                style={styles.previewImg}
+                            />
+                            <p style={styles.previewLabel}>Sneak peek 👀</p>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         )
@@ -91,6 +112,9 @@ const styles = {
     modeIcon:      { fontSize:52 },
     modeLabel:     { fontSize:26 },
     modeDesc:      { fontSize:14, textAlign:'center', lineHeight:1.4, opacity:0.8 },
+    previewPopup:  { position:'absolute', bottom:'calc(100% + 12px)', left:'50%', transform:'translateX(-50%)', background:'#0f0f1e', border:'1px solid rgba(255,255,255,0.12)', borderRadius:16, padding:12, display:'flex', flexDirection:'column', alignItems:'center', gap:8, width:280, transition:'opacity 0.2s ease, transform 0.2s ease', zIndex:10 },
+    previewImg:    { width:'100%', borderRadius:10, display:'block' },
+    previewLabel:  { fontSize:14, color:'rgba(255,255,255,0.5)', margin:0 },
     backBtn:       { position:'absolute', top:24, left:24, background:'rgba(255,255,255,0.08)', border:'none', color:'rgba(255,255,255,0.6)', fontFamily:"'Fredoka One'", fontSize:16, borderRadius:50, padding:'8px 20px', cursor:'pointer' },
     qrWrapper:     { background:'#fff', borderRadius:20, padding:24, display:'flex', flexDirection:'column', alignItems:'center', gap:12 },
     qrPlaceholder: { width:180, height:180, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48 },
