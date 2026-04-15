@@ -15,7 +15,7 @@ const PROMPTS = [
 ]
 const ROUNDS = 5
 
-export default function TappingGame({ players, onRestart }) {
+export default function TappingGame({ players, onRestart, onBackToMenu }) {
     const [phase,      setPhase]      = useMultiplayerState('phase',      'get-ready')
     const [correct,    setCorrect]    = useMultiplayerState('correct',    null)
     const [winner,     setWinner]     = useMultiplayerState('winner',     null)
@@ -134,7 +134,10 @@ export default function TappingGame({ players, onRestart }) {
                 {fastestName && (
                     <p style={{ fontSize:22, color:'#FFD93D', margin:0 }}>⚡ Fastest: {fastestName}</p>
                 )}
-                <button style={styles.restartBtn} onClick={onRestart}>Play Again →</button>
+                <div style={styles.endBtnRow}>
+                    <button style={styles.restartBtn} onClick={onRestart}>Play Again →</button>
+                    <button style={styles.menuBtn} onClick={onBackToMenu}>← Back to Menu</button>
+                </div>
             </div>
         )
     }
@@ -180,5 +183,7 @@ const styles = {
     scoreChip:   { background:'rgba(255,255,255,0.1)', color:'#fff', borderRadius:50, padding:'8px 20px', fontSize:18 },
     scoreList:   { display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:480 },
     scoreRow:    { borderRadius:16, padding:'14px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:16 },
-    restartBtn:  { marginTop:8, background:'#FF6B6B', color:'#fff', border:'none', borderRadius:50, padding:'16px 48px', fontSize:24, fontFamily:"'Fredoka One'", cursor:'pointer', boxShadow:'0 6px 24px rgba(255,107,107,0.4)' },
+    endBtnRow:   { display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginTop:8 },
+    restartBtn:  { background:'#FF6B6B', color:'#fff', border:'none', borderRadius:50, padding:'16px 48px', fontSize:24, fontFamily:"'Fredoka One'", cursor:'pointer', boxShadow:'0 6px 24px rgba(255,107,107,0.4)' },
+    menuBtn:     { background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:50, padding:'16px 36px', fontSize:20, fontFamily:"'Fredoka One'", cursor:'pointer' },
 }

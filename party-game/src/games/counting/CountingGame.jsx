@@ -16,7 +16,7 @@ function makeGeometry(shape) {
     }
 }
 
-export default function CountingGame({ players, onRestart }) {
+export default function CountingGame({ players, onRestart, onBackToMenu }) {
     const [phase]       = useMultiplayerState(CKEYS.phase,       'waiting')
     const [cRound]      = useMultiplayerState(CKEYS.round,        0)
     const [roundWinner] = useMultiplayerState(CKEYS.roundWinner,  null)
@@ -297,7 +297,10 @@ export default function CountingGame({ players, onRestart }) {
                         </div>
                     ))}
                 </div>
-                <button style={styles.restartBtn} onClick={onRestart}>Play Again →</button>
+                <div style={styles.endBtnRow}>
+                    <button style={styles.restartBtn} onClick={onRestart}>Play Again →</button>
+                    <button style={styles.menuBtn} onClick={onBackToMenu}>← Back to Menu</button>
+                </div>
             </div>
         )
     }
@@ -364,5 +367,7 @@ const styles = {
     scoreChip:      { background:'rgba(255,255,255,0.08)', color:'#fff', borderRadius:50, padding:'6px 18px', fontSize:16 },
     scoreList:      { display:'flex', flexDirection:'column', gap:12, width:'100%', maxWidth:480 },
     scoreRow:       { borderRadius:16, padding:'14px 24px', display:'flex', justifyContent:'space-between', alignItems:'center' },
-    restartBtn:     { marginTop:8, background:'#4D96FF', color:'#fff', border:'none', borderRadius:50, padding:'16px 48px', fontSize:24, fontFamily:"'Fredoka One'", cursor:'pointer', boxShadow:'0 6px 24px rgba(77,150,255,0.4)' },
+    endBtnRow:      { display:'flex', gap:16, flexWrap:'wrap', justifyContent:'center', marginTop:8 },
+    restartBtn:     { background:'#4D96FF', color:'#fff', border:'none', borderRadius:50, padding:'16px 48px', fontSize:24, fontFamily:"'Fredoka One'", cursor:'pointer', boxShadow:'0 6px 24px rgba(77,150,255,0.4)' },
+    menuBtn:        { background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:50, padding:'16px 36px', fontSize:20, fontFamily:"'Fredoka One'", cursor:'pointer' },
 }
