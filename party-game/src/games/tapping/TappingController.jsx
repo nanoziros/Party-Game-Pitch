@@ -2,16 +2,16 @@
 import { useState, useEffect } from 'react'
 
 const ALL_PROMPTS = [
-    { label: '🔴 RED',     color: '#FF6B6B' },
-    { label: '🟡 YELLOW',  color: '#FFD93D' },
-    { label: '🔵 BLUE',    color: '#4D96FF' },
-    { label: '⭐ STAR',    color: '#FFD93D' },
-    { label: '🎯 TARGET',  color: '#FF9F1C' },
-    { label: '🌈 RAINBOW', color: '#C77DFF' },
-    { label: '🔥 FIRE',    color: '#FF6B6B' },
-    { label: '💎 GEM',     color: '#4D96FF' },
-    { label: '🍀 CLOVER',  color: '#6BCB77' },
-    { label: '🎸 GUITAR',  color: '#C77DFF' },
+    { label: '🔴', color: '#FF6B6B' },
+    { label: '🟡', color: '#FFD93D' },
+    { label: '🔵', color: '#4D96FF' },
+    { label: '⭐', color: '#FFD93D' },
+    { label: '🎯', color: '#FF9F1C' },
+    { label: '🌈', color: '#C77DFF' },
+    { label: '🔥', color: '#FF6B6B' },
+    { label: '💎', color: '#4D96FF' },
+    { label: '🍀', color: '#6BCB77' },
+    { label: '🎸', color: '#C77DFF' },
 ]
 
 function shuffle(arr) {
@@ -109,10 +109,7 @@ export default function TappingController() {
                             onClick={() => handleTap(option)}
                             disabled={!!waiting || !!tapped}
                         >
-                            <span style={{ fontSize:32 }}>{option.label.split(' ')[0]}</span>
-                            <span style={{ fontSize:16, color:'rgba(255,255,255,0.8)', marginTop:4 }}>
-                {option.label.split(' ').slice(1).join(' ')}
-              </span>
+                            <span style={{ fontSize:52 }}>{option.label}</span>
                         </button>
                     )
                 })}

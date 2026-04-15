@@ -2,16 +2,16 @@
 import { useMultiplayerState, getState, setState } from 'playroomkit'
 
 const PROMPTS = [
-    { label: '🔴 RED',     color: '#FF6B6B' },
-    { label: '🟡 YELLOW',  color: '#FFD93D' },
-    { label: '🔵 BLUE',    color: '#4D96FF' },
-    { label: '⭐ STAR',    color: '#FFD93D' },
-    { label: '🎯 TARGET',  color: '#FF9F1C' },
-    { label: '🌈 RAINBOW', color: '#C77DFF' },
-    { label: '🔥 FIRE',    color: '#FF6B6B' },
-    { label: '💎 GEM',     color: '#4D96FF' },
-    { label: '🍀 CLOVER',  color: '#6BCB77' },
-    { label: '🎸 GUITAR',  color: '#C77DFF' },
+    { label: '🔴', color: '#FF6B6B' },
+    { label: '🟡', color: '#FFD93D' },
+    { label: '🔵', color: '#4D96FF' },
+    { label: '⭐', color: '#FFD93D' },
+    { label: '🎯', color: '#FF9F1C' },
+    { label: '🌈', color: '#C77DFF' },
+    { label: '🔥', color: '#FF6B6B' },
+    { label: '💎', color: '#4D96FF' },
+    { label: '🍀', color: '#6BCB77' },
+    { label: '🎸', color: '#C77DFF' },
 ]
 const ROUNDS = 5
 
@@ -151,11 +151,8 @@ export default function TappingGame({ players, onRestart, onBackToMenu }) {
                 {phase === 'get-ready' ? (
                     <span style={styles.getReady}>Get ready…</span>
                 ) : (
-                    <div style={{ textAlign:'center' }}>
-                        <div style={styles.promptLabel}>TAP THIS ON YOUR PHONE</div>
-                        <div style={{ fontSize:72, lineHeight:1.1, color: correct?.color, textShadow:`0 0 40px ${correct?.color}` }}>
-                            {correct?.label}
-                        </div>
+                    <div style={{ fontSize:120, lineHeight:1, filter:`drop-shadow(0 0 40px ${correct?.color})` }}>
+                        {correct?.label}
                     </div>
                 )}
             </div>
