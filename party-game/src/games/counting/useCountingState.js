@@ -4,7 +4,7 @@
     correctCount: 'cCorrectCount',
     roundConfig:  'cRoundConfig',
     answerEvent:  'cAnswerEvent',
-    roundWinner:  'cRoundWinner',
+    roundWinners: 'cRoundWinners', // array of player names who answered correctly
     scores:       'cScores',
     timeLeft:     'cTimeLeft',
     roundStart:   'cRoundStart',

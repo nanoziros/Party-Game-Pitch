@@ -11,7 +11,7 @@ export default function CountingController() {
 
     const [phase]       = useMultiplayerState(CKEYS.phase,       'waiting')
     const [cRound]      = useMultiplayerState(CKEYS.round,        0)
-    const [roundWinner] = useMultiplayerState(CKEYS.roundWinner,  null)
+    const [roundWinners] = useMultiplayerState(CKEYS.roundWinners, [])
     const [timeLeft]    = useMultiplayerState(CKEYS.timeLeft,     ANSWER_TIME / 1000)
     const [cScores]     = useMultiplayerState(CKEYS.scores,       {})
 
@@ -24,7 +24,7 @@ export default function CountingController() {
     }, [cRound])
 
     function handlePick(num) {
-        if (phase !== 'answering' || picked !== null) return
+        if (phase !== 'answering') return
         setPicked(num)
         setState(CKEYS.answerEvent, {
             name:      myName,
@@ -93,16 +93,18 @@ export default function CountingController() {
                 <p style={styles.hint}>
                     {feedback === 'correct' ? 'Correct!'
                         : feedback === 'wrong' ? `Wrong! You said ${picked}`
-                            : "Time's up!"}
+                            : "You didn't answer!"}
                 </p>
-                {roundWinner && (
-                    <p style={{ color:'#6BCB77', fontSize:18, margin:0 }}>⚡ {roundWinner} got it first!</p>
+                {roundWinners?.length > 0 && (
+                    <p style={{ color:'#6BCB77', fontSize:16, margin:0, textAlign:'center' }}>
+                        ⚡ {roundWinners.join(', ')} got it!
+                    </p>
                 )}
             </div>
         )
     }
 
-    const canAnswer = phase === 'answering' && picked === null
+    const canAnswer = phase === 'answering'
 
     return (
         <div style={styles.container}>
@@ -117,37 +119,35 @@ export default function CountingController() {
                 }} />
             </div>
 
-            {picked !== null ? (
-                <div style={styles.pickedBadge}>
-                    You answered: <strong>{picked}</strong>
-                </div>
-            ) : (
-                <div style={styles.pad}>
-                    {PAD.map(num => (
+            {picked !== null && (
+                <p style={styles.changeHint}>Tap another number to change</p>
+            )}
+
+            <div style={styles.pad}>
+                {PAD.map(num => {
+                    const isSelected = num === picked
+                    return (
                         <button
                             key={num}
                             style={{
                                 ...styles.padBtn,
                                 opacity:    canAnswer ? 1 : 0.35,
                                 cursor:     canAnswer ? 'pointer' : 'default',
-                                background: canAnswer ? 'rgba(77,150,255,0.18)' : 'rgba(255,255,255,0.04)',
-                                border:     `2px solid ${canAnswer ? 'rgba(77,150,255,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                                transform:  canAnswer ? 'scale(1)' : 'scale(0.97)',
+                                background: isSelected
+                                    ? 'rgba(77,150,255,0.45)'
+                                    : canAnswer ? 'rgba(77,150,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                border:     `2px solid ${isSelected ? 'rgba(77,150,255,0.9)' : canAnswer ? 'rgba(77,150,255,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                                transform:  isSelected ? 'scale(1.08)' : canAnswer ? 'scale(1)' : 'scale(0.97)',
+                                boxShadow:  isSelected ? '0 0 12px rgba(77,150,255,0.5)' : 'none',
                             }}
                             onClick={() => handlePick(num)}
                             disabled={!canAnswer}
                         >
                             {num}
                         </button>
-                    ))}
-                </div>
-            )}
-
-            {roundWinner && (
-                <p style={{ color:'#6BCB77', fontSize:18, margin:0 }}>
-                    ⚡ {roundWinner} got it!
-                </p>
-            )}
+                    )
+                })}
+            </div>
         </div>
     )
 }
@@ -158,9 +158,9 @@ const styles = {
     subHint:     { fontSize:14, color:'rgba(255,255,255,0.3)', margin:0 },
     timerTrack:  { width:'100%', maxWidth:300, height:6, background:'rgba(255,255,255,0.08)', borderRadius:3, overflow:'hidden' },
     timerFill:   { height:'100%', borderRadius:3, transition:'width 1s linear, background 0.3s' },
+    changeHint:  { fontSize:13, color:'rgba(255,255,255,0.35)', margin:0 },
     pad:         { display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:10, width:'100%', maxWidth:310 },
-    padBtn:      { borderRadius:12, padding:'16px 0', fontSize:24, color:'#fff', fontFamily:"'Fredoka One'", transition:'all 0.1s', textAlign:'center', border:'none' },
-    pickedBadge: { background:'rgba(77,150,255,0.12)', border:'2px solid rgba(77,150,255,0.35)', color:'#4D96FF', borderRadius:14, padding:'14px 28px', fontSize:20 },
+    padBtn:      { borderRadius:12, padding:'16px 0', fontSize:24, color:'#fff', fontFamily:"'Fredoka One'", transition:'all 0.15s', textAlign:'center', border:'none' },
     doneTitle:   { fontSize:32, color:'#fff', margin:0 },
     myCard:      { background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:24, padding:'24px 32px', display:'flex', flexDirection:'column', alignItems:'center', gap:8, width:'100%', maxWidth:300 },
     myCardLabel: { fontSize:13, color:'rgba(255,255,255,0.4)', margin:0, letterSpacing:2 },

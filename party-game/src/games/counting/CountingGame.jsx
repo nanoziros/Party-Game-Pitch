@@ -17,26 +17,27 @@ function makeGeometry(shape) {
 }
 
 export default function CountingGame({ players, onRestart, onBackToMenu }) {
-    const [phase]       = useMultiplayerState(CKEYS.phase,       'waiting')
-    const [cRound]      = useMultiplayerState(CKEYS.round,        0)
-    const [roundWinner] = useMultiplayerState(CKEYS.roundWinner,  null)
-    const [cScores]     = useMultiplayerState(CKEYS.scores,       {})
-    const [timeLeft]    = useMultiplayerState(CKEYS.timeLeft,     ANSWER_TIME / 1000)
-    const [answerEvent] = useMultiplayerState(CKEYS.answerEvent,  null)
-    const [objects]     = useMultiplayerState(CKEYS.objects,      [])
+    const [phase]        = useMultiplayerState(CKEYS.phase,        'waiting')
+    const [cRound]       = useMultiplayerState(CKEYS.round,         0)
+    const [roundWinners] = useMultiplayerState(CKEYS.roundWinners,  [])
+    const [cScores]      = useMultiplayerState(CKEYS.scores,        {})
+    const [timeLeft]     = useMultiplayerState(CKEYS.timeLeft,      ANSWER_TIME / 1000)
+    const [answerEvent]  = useMultiplayerState(CKEYS.answerEvent,   null)
+    const [objects]      = useMultiplayerState(CKEYS.objects,       [])
 
-    const mountRef     = useRef(null)
-    const sceneRef     = useRef(null)
-    const rendererRef  = useRef(null)
-    const cameraRef    = useRef(null)
-    const meshesRef    = useRef([])
-    const animFrameRef = useRef(null)
-    const frozenRef    = useRef(false)
-    const timerRef     = useRef(null)
-    const countdownRef = useRef(null)
-    const deadRef      = useRef(false)
-    const roundRef     = useRef(0)
-    const lastAnsRef   = useRef(null)
+    const mountRef           = useRef(null)
+    const sceneRef           = useRef(null)
+    const rendererRef        = useRef(null)
+    const cameraRef          = useRef(null)
+    const meshesRef          = useRef([])
+    const animFrameRef       = useRef(null)
+    const frozenRef          = useRef(false)
+    const timerRef           = useRef(null)
+    const countdownRef       = useRef(null)
+    const deadRef            = useRef(false)
+    const roundRef           = useRef(0)
+    const answersRef         = useRef({})   // { playerName: { answer, timestamp } }
+    const lastAnsTimestampRef = useRef({})  // { playerName: timestamp } for dedup
 
     // ── Init Three.js once ──
     useEffect(() => {
@@ -173,38 +174,19 @@ export default function CountingGame({ players, onRestart, onBackToMenu }) {
         }
     }, [])
 
-    // ── React to answers ──
+    // ── React to answers — record each player's latest choice ──
     useEffect(() => {
         if (!answerEvent) return
-        if (answerEvent.round !== roundRef.current)       return
-        if (lastAnsRef.current === answerEvent.timestamp) return
-        if (getState(CKEYS.phase) !== 'answering')        return
-        lastAnsRef.current = answerEvent.timestamp
-
-        const correct = getState(CKEYS.correctCount)
-        const name    = answerEvent.name
-
-        if (answerEvent.answer !== correct) {
-            const current = getState(CKEYS.scores) ?? {}
-            setState(CKEYS.scores, {
-                ...current,
-                [name]: (current[name] ?? 0) - 1,
-            })
-            return
+        if (answerEvent.round !== roundRef.current) return
+        if (getState(CKEYS.phase) !== 'answering')  return
+        // Dedup: ignore if we already processed this exact event for this player
+        if (lastAnsTimestampRef.current[answerEvent.name] === answerEvent.timestamp) return
+        lastAnsTimestampRef.current[answerEvent.name] = answerEvent.timestamp
+        // Overwrite with latest answer — player can change until timer ends
+        answersRef.current[answerEvent.name] = {
+            answer:    answerEvent.answer,
+            timestamp: answerEvent.timestamp,
         }
-
-        const elapsed   = answerEvent.timestamp - (getState(CKEYS.roundStart) ?? answerEvent.timestamp)
-        const maxPts    = 5
-        const minPts    = 1
-        const timeRatio = Math.min(elapsed / ANSWER_TIME, 1)
-        const pts       = Math.max(minPts, Math.round(maxPts - timeRatio * (maxPts - minPts)))
-        const current   = getState(CKEYS.scores) ?? {}
-        setState(CKEYS.scores, {
-            ...current,
-            [name]: (current[name] ?? 0) + pts,
-        })
-        setState(CKEYS.roundWinner, name)
-        endRound(roundRef.current)
     }, [answerEvent])
 
     function buildObjects(config) {
@@ -224,17 +206,19 @@ export default function CountingGame({ players, onRestart, onBackToMenu }) {
         clearTimeout(timerRef.current)
         clearInterval(countdownRef.current)
         roundRef.current = r
+        answersRef.current = {}
+        lastAnsTimestampRef.current = {}
 
         const config = ROUNDS[r]
         const { objs, correctCount } = buildObjects(config)
 
-        setState(CKEYS.round,        r)
-        setState(CKEYS.phase,        'showing')
-        setState(CKEYS.correctCount, correctCount)
-        setState(CKEYS.roundWinner,  null)
-        setState(CKEYS.roundConfig,  { label: config.label })
-        setState(CKEYS.objects,      objs)
-        setState(CKEYS.answerEvent,  null)
+        setState(CKEYS.round,         r)
+        setState(CKEYS.phase,         'showing')
+        setState(CKEYS.correctCount,  correctCount)
+        setState(CKEYS.roundWinners,  [])
+        setState(CKEYS.roundConfig,   { label: config.label })
+        setState(CKEYS.objects,       objs)
+        setState(CKEYS.answerEvent,   null)
 
         timerRef.current = setTimeout(() => {
             if (deadRef.current) return
@@ -259,6 +243,28 @@ export default function CountingGame({ players, onRestart, onBackToMenu }) {
         clearTimeout(timerRef.current)
         clearInterval(countdownRef.current)
         frozenRef.current = true
+
+        // Score all players who submitted an answer this round
+        const correct = getState(CKEYS.correctCount)
+        const scores  = { ...(getState(CKEYS.scores) ?? {}) }
+        const winners = []
+        const roundStart = getState(CKEYS.roundStart) ?? 0
+        Object.entries(answersRef.current).forEach(([name, { answer, timestamp }]) => {
+            if (answer === correct) {
+                const elapsed   = timestamp - roundStart
+                const maxPts    = 5
+                const minPts    = 1
+                const timeRatio = Math.min(elapsed / ANSWER_TIME, 1)
+                const pts       = Math.max(minPts, Math.round(maxPts - timeRatio * (maxPts - minPts)))
+                scores[name]    = (scores[name] ?? 0) + pts
+                winners.push(name)
+            } else {
+                scores[name] = (scores[name] ?? 0) - 1
+            }
+        })
+        setState(CKEYS.scores,       scores)
+        setState(CKEYS.roundWinners, winners)
+
         setState(CKEYS.phase, 'reveal')
         timerRef.current = setTimeout(() => {
             if (deadRef.current) return
@@ -334,10 +340,12 @@ export default function CountingGame({ players, onRestart, onBackToMenu }) {
 
             <div ref={mountRef} style={styles.canvas3d} />
 
-            {roundWinner && phase === 'reveal' && (
-                <div style={styles.winnerBanner}>⚡ {roundWinner} got it!</div>
+            {phase === 'reveal' && roundWinners?.length > 0 && (
+                <div style={styles.winnerBanner}>
+                    ⚡ {roundWinners.join(', ')} got it!
+                </div>
             )}
-            {phase === 'reveal' && !roundWinner && (
+            {phase === 'reveal' && (!roundWinners || roundWinners.length === 0) && (
                 <div style={styles.noWinnerBanner}>Nobody answered correctly!</div>
             )}
 
